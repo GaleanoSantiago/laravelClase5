@@ -1,0 +1,142 @@
+
+//CRUD De areas - Listar Areas
+Route::get('/areas', function () {
+
+   // $areas = DB::select('SELECT id, descripcion FROM area');
+    //Query Builder
+    $areas= DB::table('area')->select('id', 'descripcion')->get();
+
+
+    //dd($areas);
+    return view('areas',[ 'areas'=>$areas ] );
+});
+//Agregar Areaas
+Route::get('/area/create', function () {
+
+    return view('areaCreate');
+});
+Route::post('/area/store', function ()
+{
+    //capturamos dato enviado por el form
+    $descripcion = request()->descripcion;
+    //insertar dato en tabla 
+    try {
+        //Raw SQL
+       DB::insert("
+                INSERT INTO area
+                        (descripcion)
+                    VALUES
+                        ( :descripcion )",
+                        [ $descripcion ]
+                );
+                //Query Builder
+      /*  DB::table('areas')
+                ->insert(
+                    [ 'descripcion'=>$descripcion ]
+                );*/
+        return redirect('/areas')
+                ->with([
+                    'mensaje'=>'Area: '.$descripcion.' agregada correctamente.',
+                    'css'=>'success'
+                ]);
+    }
+    catch ( \Throwable $th ){
+        return redirect('/areas')
+            ->with([
+                'mensaje'=>'No se pudo agregar la Area: '.$descripcion,
+                'css'=>'danger'
+            ]);
+    }
+});
+Route::get('/area/edit/{id}', function ($id)
+{
+    //obtenemos el dato de la Area por su id
+  /* $area = DB::select(
+                        'SELECT id, descripcion
+                            FROM area
+                            WHERE id = :id',
+                            [ $id ]);
+                           dd($area);*/
+   
+   // Query Builder
+    $area = DB::table('area')
+                    ->where('id', $id)
+                    ->first();
+
+    return view('areaEdit', [ 'area'=>$area ]);
+});
+Route::patch('/area/update', function ()
+{
+    //capturamos datos enviados popr el form
+    $id = request()->id;
+    $descripcion = request()->descripcion;
+    /**
+     *  Raw SQL
+     *  DB::update("UPDATE area
+     *                   SET descripcion = :descripcion
+     *                   WHERE id = :id",
+     *                   [ $descripcion, $id ]
+     *                 );
+     */
+    try {
+        DB::table('area')
+                ->where( 'id', $id )
+                ->update(
+                    [ 'descripcion' => $descripcion ]
+                );
+        return redirect('/areas')
+                ->with([
+                        'mensaje'=>'Area: '.$descripcion.' agregada correctamente',
+                        'css'=>'success'
+                       ]);
+    }
+    catch ( \Throwable $th ){
+        return redirect('/areas')
+            ->with([
+                'mensaje'=>'No se pudo modificar la Area: '.$descripcion,
+                'css'=>'danger'
+            ]);
+    }
+});
+Route::get('/area/delete/{id}', function ($id)
+{
+    //obtenemos datos de la Area por su id
+    $area = DB::table('area')
+                    ->where('id', $id)
+                    ->first();
+    //saber si hay Destinos relacionados
+    /*$cantidad = DB::table('destinos')
+                    ->where('id', $id)
+                    ->count(); //first() : obj | null*/
+   /*if( $cantidad ){
+        return redirect('areas')
+            ->with([
+                'mensaje' => 'No se puede borrar la Area: '.$area->descripcion,
+                'css' => 'warning'
+            ]);
+    }*/
+
+    return view('areaDelete', [ 'area'=>$area ]);
+});
+Route::delete('/area/destroy', function ()
+{
+    $id = request()->id;
+    $descripcion = request()->descripcion;
+    try{
+        DB::table('area')
+            ->where('id',$id)
+            ->delete();
+        return redirect('/areas')
+            ->with([
+                'mensaje'=>'Area: '.$descripcion.' eliminada correctamente',
+                'css'=>'success'
+            ]);
+    }
+    catch ( \Throwable $th ){
+        return redirect('/areas')
+            ->with([
+                'mensaje'=>'No se pudo eliminar la Area: '.$descripcion,
+                'css'=>'danger'
+            ]);
+    }
+});
